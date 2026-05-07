@@ -1,0 +1,45 @@
+{
+  "family": "rag-api-task",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "256",
+  "memory": "512",
+  "taskRoleArn": "arn:aws:iam::968909452879:role/ecsTaskRole",
+  "executionRoleArn": "arn:aws:iam::968909452879:role/ecsTaskExecutionRole",
+
+  "containerDefinitions": [
+    {
+      "name": "rag-api",
+      "image": "968909452879.dkr.ecr.eu-west-3.amazonaws.com/rag-api:latest",
+      "essential": true,
+
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "hostPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+
+      "environment": [
+        {
+          "name": "OPENSEARCH_HOST",
+          "value": "search-rag-opensearch-bppgxgm5gtv5dbnk3vh5yh3h5u.eu-west-3.es.amazonaws.com"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "eu-west-3"
+        }
+      ],
+
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/rag-api",
+          "awslogs-region": "eu-west-3",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

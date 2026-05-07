@@ -1,0 +1,88 @@
+name: Deploy RAG App
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  AWS_REGION: eu-west-3
+  ECR_API_REPOSITORY: rag-api
+  ECR_UI_REPOSITORY: rag-ui
+  ECS_CLUSTER: rag-cluster
+  ECS_API_SERVICE: rag-api-service
+  ECS_UI_SERVICE: rag-ui-service
+
+jobs:
+
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ env.AWS_REGION }}
+
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+
+    #################################
+    # BUILD API
+    #################################
+
+    - name: Build API image
+      run: |
+        docker build -t $ECR_API_REPOSITORY -f Dockerfile .
+
+    - name: Tag API image
+      run: |
+        docker tag $ECR_API_REPOSITORY:latest \
+        968909452879.dkr.ecr.eu-west-3.amazonaws.com/$ECR_API_REPOSITORY:latest
+
+    - name: Push API image
+      run: |
+        docker push \
+        968909452879.dkr.ecr.eu-west-3.amazonaws.com/$ECR_API_REPOSITORY:latest
+
+    #################################
+    # BUILD UI
+    #################################
+
+    - name: Build UI image
+      run: |
+        docker build -t $ECR_UI_REPOSITORY -f dockerfile.ui .
+
+    - name: Tag UI image
+      run: |
+        docker tag $ECR_UI_REPOSITORY:latest \
+        968909452879.dkr.ecr.eu-west-3.amazonaws.com/$ECR_UI_REPOSITORY:latest
+
+    - name: Push UI image
+      run: |
+        docker push \
+        968909452879.dkr.ecr.eu-west-3.amazonaws.com/$ECR_UI_REPOSITORY:latest
+
+    #################################
+    # DEPLOY ECS
+    #################################
+
+    - name: Deploy API ECS
+      run: |
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_API_SERVICE \
+          --force-new-deployment
+
+    - name: Deploy UI ECS
+      run: |
+        aws ecs update-service \
+          --cluster $ECS_CLUSTER \
+          --service $ECS_UI_SERVICE \
+          --force-new-deployment
