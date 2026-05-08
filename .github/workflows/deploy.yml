@@ -39,7 +39,7 @@ jobs:
 
     - name: Build API image
       run: |
-        docker build -t $ECR_API_REPOSITORY -f Dockerfile .
+        docker build -t $ECR_API_REPOSITORY -f Dockerfile.api .
 
     - name: Tag API image
       run: |
@@ -57,7 +57,7 @@ jobs:
 
     - name: Build UI image
       run: |
-        docker build -t $ECR_UI_REPOSITORY -f dockerfile.ui .
+        docker build -t $ECR_UI_REPOSITORY -f Dockerfile.ui .
 
     - name: Tag UI image
       run: |
